@@ -4,6 +4,12 @@ import random
 import pickle
 import glob
 import sys
+import numpy as np
+index_char = {}
+char_index = {}
+for i,char in enumerate(list('0123456789 ')):
+  index_char[i]    = char
+  char_index[char] = i
 
 class OR(object):
   fizz     = [1.0, 0.0, 0.0]
@@ -14,12 +20,12 @@ class OR(object):
     ...
 
 def fizzbuzz():
-  ice   = [i for i in range(100000)]
+  ice   = [i for i in range(100000*5)]
   random.shuffle(ice)
 
   ice_pack = {}
   for e, i in enumerate(ice):
-    e = e//1024
+    e = e//(1024*5)
     if ice_pack.get(e) is None:
       ice_pack[e] = []
     ice_pack[e].append( i )
@@ -37,33 +43,26 @@ def fizzbuzz():
         output = OR.fizz
       else:
         output = OR.path
-
-      pair = (inputs, output)
-      print(pair)
+      
+      # inputs:string -> inputs:tensor 
+      input_tensor = []
+      for char in list(inputs):
+        onehot = [0.0]*11
+        onehot[char_index[char]] = 1.0
+        input_tensor.append( onehot )
+      input_tensor  = np.array( list(reversed(input_tensor) ) )
+      
+      # output:vector -> output:nparray
+      output_tensor = np.array( output )
+      pair = (input_tensor, output_tensor)
+      # print(pair)
       pairs.append( pair ) 
-    open('dataset/dataset_%09d.pkl', 'wb').write( pickle.dumps(pairs) )
+    Xs = np.array( [xs for xs, ys in pairs] )
+    Ys = np.array( [ys for xs, ys in pairs] )
+    data_pair = (Xs, Ys) 
+    open('dataset/dataset_%09d.pkl'%ice, 'wb').write( pickle.dumps(data_pair) )
 
-  
-
-def build_dict():
-  char_freq = {}
-  for eg, name in enumerate( glob.glob("dataset/*.pkl") ):
-    if eg%500 == 0:
-      print( eg, name )
-    mms, raws = pickle.loads( open(name, "rb").read() )
-    for char in list( "".join( [mms, raws] ) ):
-      if char_freq.get( char ) is None:
-        char_freq[char] = len( char_freq )
-  open("char_freq.pkl", "wb").write( pickle.dumps(char_freq) )
-
-  char_index = {}
-  for char, freq in char_freq.items():
-    char_index[char] = len( char_index )
-  open("char_index.pkl", "wb").write( pickle.dumps(char_index) )
 if __name__ == '__main__':
   if '--step1' in sys.argv:
     fizzbuzz()
-
-  if '--step2' in sys.argv:
-    build_dict()
  
