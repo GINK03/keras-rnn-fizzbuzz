@@ -20,62 +20,46 @@ import os
 import re
 
 
-timesteps   = 200
-inputs      = Input(shape=(timesteps, 100))
-encoded     = GRU(512)(inputs)
-inputs_a    = inputs
-inputs_a    = Dense(2048)(inputs_a)
-inputs_a    = BN()(inputs_a)
-encoder     = Model(inputs, inputs_a)
-
-x           = RepeatVector(timesteps)( inputs_a )
-x           = Bi(LSTM(512, return_sequences=True))(x)
-decoded     = TD(Dense(100, activation='softmax'))(x)
+inputs      = Input(shape=(10, 11))
+encoded     = GRU(256)(inputs)
+encoded     = Dense(512, activation='relu')( encoded )
+encoded     = BN()( encoded )
+encoder     = Model( inputs, encoded )
+x           = RepeatVector(50)( encoded )
+x           = Bi(GRU(256, return_sequences=True))(x)
+x           = BN()(x)
+x           = TD(Dense(256, activation='relu'))(x)
+decoded     = Dense(3, activation='sigmoid')( Flatten()(x) )
 
 fizzbuzz     = Model(inputs, decoded)
-fizzbuzz.compile(optimizer=Adam(), loss='categorical_crossentropy')
+fizzbuzz.compile(optimizer=Adam(), loss='binary_crossentropy')
 
 buff = None
-def callbacks(epoch, logs):
+def callback(epoch, logs):
   global buff
   buff = copy.copy(logs)
-  print("epoch" ,epoch)
-  print("logs", logs)
+batch_callback = LambdaCallback(on_batch_end=lambda batch,logs: callback(batch,logs) )
 
 def train():
-  c_i = pickle.loads( open("char_index.pkl", "rb").read() )
-  xss = []
-  yss = []
-  for eg, name in enumerate(glob.glob("dataset/*.pkl")):
-    mms, raw = pickle.loads( open( name, "rb" ).read() )
-    sss = eval( raw )
-    print( sss["txt"] )
-    print( mms, raw )
-   
-    x = [" "]*200
-    for i, m in enumerate(mms):
-      x[i] = m
-    xs = [ [0.0]*len(c_i) for i in range(200) ]
-    for i in range(len(x)):
-      xs[i][ c_i[x[i]] ] = 1.0
-    xs = list(reversed( xs ))
 
-    y = [" "]*200
-    for i, m in enumerate(raw):
-      y[i] = m
-    ys = [ [0.0]*len(c_i) for i in range(200) ]
-    for i in range(len(x)):
-      ys[i][ c_i[y[i]] ] = 1.0
-   
-    xss.append( xs )
-    yss.append( ys )
-  
-  xss = np.array( xss )
-  yss = np.array( yss )
+  optims = [Adam(), SGD(), RMSprop()]
 
-  for i in range(10000):
-    parser.fit(xss, yss)
-    parser.save("models/%9f_%09d.h5"%(buff['loss'], i))
+  count = 0
+  for i in range(50):
+    for name in sorted(glob.glob("dataset/*.pkl")):
+      datanum = re.search(r'(\d+)', name).group(1)
+      if int(datanum) % 5 == 0: 
+        continue
+      count += 1
+      data_pair = pickle.loads( open( name, "rb" ).read() )
+      Xs, Ys    = data_pair
+      target_optim = random.choice(optims)
+      print("👻train dataset No.", name, "optimizer", target_optim)
+      fizzbuzz.optimizer = target_optim
+      fizzbuzz.fit(Xs, Ys, callbacks=[batch_callback])
+      fizzbuzz.save("models/%09d_%09.5f.h5"%(count, buff['loss']))
+
+
 if __name__ == '__main__':
   if '--train' in sys.argv:
-    train() 
+    train()
