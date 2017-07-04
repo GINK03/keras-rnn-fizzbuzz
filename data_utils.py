@@ -20,7 +20,8 @@ class OR(object):
     ...
 
 def fizzbuzz():
-  ice   = [i for i in range(100000*5)]
+  BY    = 20
+  ice   = [i for i in range(10000*BY)]
   random.shuffle(ice)
 
   ice_pack = {}
