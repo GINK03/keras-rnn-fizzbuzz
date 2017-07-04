@@ -118,5 +118,9 @@ $ python3 fizzbuzz.py --train
 $ python3 fizzbuzz.py --predict
 ```
 
+## 感想
+データによってはまともに収束してくれないものあり、RNNではその傾向が特に顕著です  
+性格にロス率の違いなどを測ったことがなかったのですが、Epochをいじることによって、安定して学習させることができることがあるということでした  
+
 ## 参考文献
 [1] [Deep Learningの技術と未来](https://www.slideshare.net/beam2d/deep-learning-22544096)
