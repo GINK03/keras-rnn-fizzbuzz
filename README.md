@@ -22,8 +22,7 @@ RNNでも、FizzBuzzは可能なのではないでしょうか
 
 ## モデル
 '1:Fizz, 2:Buzz, 3:Fizz Buzz, 4:そのまま(Path)'と４値の判別問題を全結合層２層でといている問題設定が多いが、
-'1:Fizz, 2:Buzz, 3:Path'の３値のそれぞれのアクティブな状態を求める問題設定とする  
-つまり、softmaxの活性化関数を用いるのではなく、sigmoidを三つ用いbinary-crossentropyにて最小化する
+'1:Fizz, 2:Buzz, 3:Path'の３値のそれぞれの状態を求める問題設定とする  
 
 <p align="center">
   <img width="450px" src="https://user-images.githubusercontent.com/4949982/27811887-b6b1e360-60a5-11e7-96bb-fa5a328090e9.png">
@@ -42,6 +41,7 @@ decoded      = Dense(3, activation='sigmoid')( Flatten()(encoded1_1x) )
 fizzbuzz     = Model(inputs, decoded)
 fizzbuzz.compile(optimizer=Adam(), loss='binary_crossentropy')
 ```
+
 スケジューラ（初期のデータセットは、epochを多く学習し、後半になるにつれ一回のみにスケジューリングしている）
 ```python
 class CURRICULUM:
@@ -56,6 +56,20 @@ class CURRICULUM:
 fizzbuzz.fit(Xs, Ys, epochs=CURRICULUM.GET(), callbacks=[batch_callback])
 ...
 ```
+
+コードや日本語では伝えるのに私の貧困なコミュ力では難しかったので、画像を添付しますと、このような差があります  
+<p align="center">
+  <img width="650px" src="https://user-images.githubusercontent.com/4949982/27835696-0c453b12-6117-11e7-8c35-f8b7a40d9670.png">
+</p>
+<div align="center"> 図 2. スケジューリングなし </div>
+
+<p align="center">
+  <img width="650px" src="https://user-images.githubusercontent.com/4949982/27835713-22556756-6117-11e7-976d-5fcc35ea4939.png">
+</p>
+<div align="center"> 図 3. スケジューリングあり </div>
+
+このように、学習初期に置いて、学習するデータを非対称にして、最初のデータは多めに繰り返し学習させます  
+
 
 ## 実験
 200,000件のFizz Buzzのデータセットを、[スクリプト](https://github.com/GINK03/keras-rnn-fizzbuzz-on-dev/blob/master/data_utils.py)で作成し、5000件ずつ、データセットを分割し40個のデータセットを学習させる
@@ -73,8 +87,8 @@ fizzbuzz.fit(Xs, Ys, epochs=CURRICULUM.GET(), callbacks=[batch_callback])
 <p align="center">
   <img width="750px" src="https://user-images.githubusercontent.com/4949982/27813446-f4374526-60b0-11e7-957f-c5ee05c8780a.png">
 </p>
-<div align="center"> 図2. epochごとのlossの変化 </div>
-初期値依存性を考慮しても、この差は大きく、スケジューリングを行うことが、まともに収束するしないなどの差を担っているように思われる
+<div align="center"> 図4. trainデータのepochごとのlossの変化 </div>
+ニューラルネットワークの初期値の依存性を考慮しても、この差は大きく、スケジューリングを行うことが、まともに収束するしないなどの差を担っているように思われる
 
 モデルAはテストデータにおける精度100%であった  
 モデルBは68%であった  
