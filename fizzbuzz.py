@@ -27,12 +27,6 @@ encoded1     = Bi( GRU(256, activation='relu') )(inputs)
 encoded1     = Dense(512, activation='relu')( encoded1 )
 encoded1_1x  = Reshape((1,512,))(encoded1)
 
-#encoded2     = Dense(512, activation='relu')( Flatten()( inputs ) )
-#encoded2     = Dense(512, activation='relu')( encoded2 )
-#encoded2_1x  = Reshape((1,512,))(encoded2)
-
-#mult         = multiply( [encoded1, encoded2] ) # ここを加えると、性能の劣化が見られる
-#conc         = concatenate( [encoded1_1x, encoded2_1x] )
 decoded      = Dense(3, activation='sigmoid')( Flatten()(encoded1_1x) )
 
 fizzbuzz     = Model(inputs, decoded)
@@ -51,8 +45,6 @@ batch_callback = LambdaCallback(on_epoch_end=lambda batch,logs: callback(batch,l
 
 class CURRICULUM:
   EPOCH = [50, 30, 20, 10, 5, 1]
-  EPOCH = [1]
-
   @staticmethod
   def GET():
     if len(CURRICULUM.EPOCH) > 0:
@@ -105,11 +97,18 @@ def predict():
       continue
     data_pair = pickle.loads( open( name, "rb" ).read() )
     Xs, Ys    = data_pair
-    for (real, pred, inputs) in zip(Ys.tolist(), fizzbuzz.predict(Xs).tolist(), Xs.tolist()):
+    correct = 0.
+    total   = 0.
+    for e, (real, pred, inputs) in enumerate( zip(Ys.tolist(), fizzbuzz.predict(Xs).tolist(), Xs.tolist()) ) :
+      if e > 100:
+        break
       origR, orig = RURE.CH(real, inputs) 
       predR, orig = RURE.CH(pred, inputs)
       print( orig, "original", origR, "predict", predR, origR == predR)
-  
+      if origR == predR:
+        correct += 1.
+      total += 1.
+    print( correct/total * 100 )
 
 if __name__ == '__main__':
   if '--train' in sys.argv:
