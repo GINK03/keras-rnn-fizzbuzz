@@ -80,8 +80,8 @@ fizzbuzz.fit(Xs, Ys, epochs=CURRICULUM.GET(), callbacks=[batch_callback])
 モデルBは68%であった  
 
 なお、出力はこのようになっている
-左から、入力値、人手による結果、予想値、正解だったかどうか、である  
-ほぼ100%あっていることが確認できた  
+左から、入力値、人手による結果、予想値、正解だったかどうか、である（PATHとは、そのまま出力するという意味にしました）
+ほぼ100%あっていることが確認できた  
 ```
     64170 original result = Fizz Buzz , predict result = Fizz Buzz , result = True
       9791 original result = Path , predict result = Path , result = True
